@@ -1,0 +1,10 @@
+users
+	id serial (PK)
+	name varchar(255) (required)
+	profile picture varchar(255)
+	email varchar(254) (required, unique)
+	mobile number char(10)
+	username varchar(50) (required, unique)
+	password char(64) (required)
+	fcm text
+	token varchar(255)
