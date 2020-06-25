@@ -7,6 +7,7 @@ import (
 	"os"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
 	// "strings"
 )
 
@@ -72,4 +73,51 @@ var UserAuthMux = func(next http.Handler) http.Handler {
 	})
 }
 
-// Gin Middleware
+func UserAuthGin() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		unauth := []string{"/register", "/login", "/forgot", "/logout"}
+		requestPath := c.Request.URL.Path
+
+		for _, value := range unauth {
+			if value == requestPath {
+				c.Next()
+				return
+			}
+		}
+
+		tokenHeader := c.GetHeader("token")
+
+		if tokenHeader == "" {
+			c.Header("Content-Type", "application/json")
+			config.SendUnauthorizedResponse(c.Writer, `{"message": "Missing Headers"}`)
+			return
+		}
+
+		tk := &structs.Token{}
+
+		token, err := jwt.ParseWithClaims(tokenHeader, tk, func(token *jwt.Token) (interface{}, error) {
+			return []byte(os.Getenv("auth_pass")), nil
+		})
+
+		if err != nil {
+			c.Header("Content-Type", "application/json")
+			config.SendUnauthorizedResponse(c.Writer, `{"message": "Malformed Headers"}`)
+			return
+		}
+
+		if !token.Valid {
+			c.Header("Content-Type", "application/json")
+			config.SendUnauthorizedResponse(c.Writer, `{"message": "Invalid Headers"}`)
+			return
+		}
+
+		var forCountScan int
+		if err := db.QueryRow("SELECT id FROM users WHERE token = $1", tokenHeader).Scan(&forCountScan); err != nil {
+			c.Header("Content-Type", "application/json")
+			config.SendUnauthorizedResponse(c.Writer, `{"message": "Invalid Session"}`)
+			return
+		}
+
+		c.Next()
+	}
+}

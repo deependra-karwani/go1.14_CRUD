@@ -21,8 +21,8 @@ func init() {
 func Worker() {
 	for {
 		select {
-		case job := <-APIQueue:
-			go job.Work(job.W, job.R, job.Done)
+		case api := <-APIQueue:
+			go api.Work(api.W, api.R, api.Done)
 		}
 	}
 }

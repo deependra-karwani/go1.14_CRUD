@@ -1,6 +1,8 @@
 package structs
 
-import "net/http"
+import (
+	"net/http"
+)
 
 type API struct {
 	Work func(w http.ResponseWriter, r *http.Request, done chan<- bool)

@@ -14,7 +14,7 @@ import (
 func main() {
 	r := mux.NewRouter()
 
-	userSr := r.PathPrefix("/").Subrouter()
+	userSr := r.PathPrefix("/user").Subrouter()
 	fileSr := r.PathPrefix("/").Subrouter()
 
 	userSr.Use(middlewares.UserAuthMux)
