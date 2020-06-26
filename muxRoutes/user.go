@@ -64,4 +64,11 @@ func AddUserHandler(r *mux.Router) {
 		workers.AddToQueue(controllers.DeleteUserAccount, w, r, done)
 		<-done
 	}).Methods(http.MethodDelete)
+
+	r.HandleFunc("/refresh", func(w http.ResponseWriter, r *http.Request) {
+		done := make(chan bool)
+		defer close(done)
+		workers.AddToQueue(controllers.RefreshToken, w, r, done)
+		<-done
+	}).Methods(http.MethodGet)
 }

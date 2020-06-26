@@ -63,4 +63,11 @@ func AddUserHandler(r *gin.RouterGroup) {
 		workers.AddToQueue(controllers.DeleteUserAccount, c.Writer, c.Request, done)
 		<-done
 	})
+
+	r.GET("/refresh", func(c *gin.Context) {
+		done := make(chan bool)
+		defer close(done)
+		workers.AddToQueue(controllers.RefreshToken, c.Writer, c.Request, done)
+		<-done
+	})
 }

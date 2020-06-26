@@ -5,6 +5,7 @@ import (
 	"CRUD/structs"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"golang.org/x/crypto/bcrypt"
@@ -329,4 +330,36 @@ func DeleteUserAccount(w http.ResponseWriter, r *http.Request, done chan<- bool)
 	}
 
 	config.SendSuccessResponse(w, `{"message": "Account Deleted Successfully"}`)
+}
+
+func RefreshToken(w http.ResponseWriter, r *http.Request, done chan<- bool) {
+	defer func() {
+		done <- true
+	}()
+	w.Header().Set("Content-Type", "application/json")
+
+	email := fmt.Sprintf("%s", r.Context().Value("userid"))
+
+	token, err := config.GenToken(email)
+	if err != nil {
+		config.SendBadReqResponse(w, `{"message": "Could Not Establish Session. Please Try Again."}`)
+		return
+	}
+
+	stmt := "UPDATE handlers SET token = $1 WHERE email = $2"
+	res, err := db.Exec(stmt, token, email)
+
+	if err != nil {
+		config.SendBadReqResponse(w, `{"message": "Could Not Re-Establish Session. Please Try Again."}`)
+		return
+	}
+
+	count, err2 := res.RowsAffected()
+	if count == 0 || err2 != nil {
+		config.SendBadReqResponse(w, `{"message": "Could Not Re-Establish Session. Please Try Again."}`)
+		return
+	}
+
+	w.Header().Add("token", token)
+	config.SendSuccessResponse(w, `{"message": "Session Renewed"}`)
 }

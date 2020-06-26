@@ -3,6 +3,7 @@ package middlewares
 import (
 	"CRUD/config"
 	"CRUD/structs"
+	"context"
 	"net/http"
 	"os"
 
@@ -26,7 +27,7 @@ var UserAuthMux = func(next http.Handler) http.Handler {
 		// fmt.Printf("%#v", r)
 
 		for _, value := range unauth {
-			if value == requestPath {
+			if value == "/user"+requestPath {
 				next.ServeHTTP(w, r)
 				return
 			}
@@ -47,12 +48,24 @@ var UserAuthMux = func(next http.Handler) http.Handler {
 		})
 
 		if err != nil {
+			if requestPath == "/user/refresh" {
+				ctx := context.WithValue(r.Context(), "email", tk.Email)
+				r = r.WithContext(ctx)
+				next.ServeHTTP(w, r)
+				return
+			}
 			w.Header().Set("Content-Type", "application/json")
 			config.SendUnauthorizedResponse(w, `{"message": "Malformed Headers"}`)
 			return
 		}
 
 		if !token.Valid {
+			if requestPath == "/user/refresh" {
+				ctx := context.WithValue(r.Context(), "email", tk.Email)
+				r = r.WithContext(ctx)
+				next.ServeHTTP(w, r)
+				return
+			}
 			w.Header().Set("Content-Type", "application/json")
 			config.SendUnauthorizedResponse(w, `{"message": "Invalid Headers"}`)
 			return
@@ -100,12 +113,26 @@ func UserAuthGin() gin.HandlerFunc {
 		})
 
 		if err != nil {
+			if requestPath == "/user/refresh" {
+				r := c.Request
+				ctx := context.WithValue(r.Context(), "email", tk.Email)
+				r = r.WithContext(ctx)
+				c.Next()
+				return
+			}
 			c.Header("Content-Type", "application/json")
 			config.SendUnauthorizedResponse(c.Writer, `{"message": "Malformed Headers"}`)
 			return
 		}
 
 		if !token.Valid {
+			if requestPath == "/user/refresh" {
+				r := c.Request
+				ctx := context.WithValue(r.Context(), "email", tk.Email)
+				r = r.WithContext(ctx)
+				c.Next()
+				return
+			}
 			c.Header("Content-Type", "application/json")
 			config.SendUnauthorizedResponse(c.Writer, `{"message": "Invalid Headers"}`)
 			return
