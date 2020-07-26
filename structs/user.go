@@ -26,6 +26,7 @@ type ForSession struct {
 }
 
 type UserShort struct {
+	Id       int    `json:"id"`
 	ProfPic  string `json:"profpic"`
 	Name     string `json:"name"`
 	Username string `json:"username"`

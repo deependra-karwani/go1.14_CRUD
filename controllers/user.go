@@ -204,7 +204,7 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request, done chan<- bool) {
 	}
 
 	// stmt := "SELECT profPic, name, username FROM users" // All Users
-	stmt := "SELECT profPic, name, username FROM users WHERE id <> $1"
+	stmt := "SELECT id, profPic, name, username FROM users WHERE id <> $1"
 	result, err := db.Query(stmt, query["userid"][0])
 	if err != nil {
 		config.SendBadReqResponse(w, `{"message": "Could not Fetch List. Please Try Again."}`)
@@ -216,7 +216,7 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request, done chan<- bool) {
 	for result.Next() {
 		var user structs.UserShort
 
-		if err := result.Scan(&user.ProfPic, &user.Name, &user.Username); err != nil {
+		if err := result.Scan(&user.Id, &user.ProfPic, &user.Name, &user.Username); err != nil {
 			config.SendBadReqResponse(w, `{"message": "Could not Fetch List. Please Try Again."}`)
 			return
 		}
